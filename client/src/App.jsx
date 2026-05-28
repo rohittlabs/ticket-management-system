@@ -9,6 +9,7 @@ import TicketList from './pages/TicketList';
 import TicketDetail from './pages/TicketDetail';
 import CreateTicket from './pages/CreateTicket';
 import EditTicket from './pages/EditTicket';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -35,8 +36,10 @@ function App() {
           } />
 
           {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/tickets" replace />}/>
-          <Route path="*" element={<Navigate to="/tickets" replace />}/>
+          <Route path="/" element={<Navigate to="/tickets" replace />} />
+
+          {/* 404 - catch all unknown routes */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -13,14 +13,27 @@ const Login = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user starts typing again
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
+    // Frontend validation
     if (!formData.email || !formData.password) {
       setError('All fields are required');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -30,7 +43,24 @@ const Login = () => {
       login(res.data.user, res.data.token);
       navigate('/tickets');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      // Handle specific error codes
+      if (err.response) {
+        // Server responded with an error
+        if (err.response.status === 401) {
+          setError('Invalid email or password. Please try again.');
+        } else if (err.response.status === 400) {
+          setError(err.response.data.message || 'Invalid input');
+        } else if (err.response.status === 500) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError(err.response.data.message || 'Login failed');
+        }
+      } else if (err.request) {
+        // Request was made but no response (network error)
+        setError('Cannot connect to server. Please check your internet connection.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -42,34 +72,54 @@ const Login = () => {
         <h2 style={styles.heading}>🎫 Welcome Back</h2>
         <p style={styles.subheading}>Login to your account</p>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <div style={styles.error}>
+            ⚠️ {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
             <label style={styles.label}>Email</label>
             <input
-              style={styles.input}
+              style={{
+                ...styles.input,
+                borderColor: error && !formData.email ? '#ef4444' : '#e5e7eb'
+              }}
               type="email"
               name="email"
               placeholder="john@example.com"
               value={formData.email}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
           <div style={styles.field}>
             <label style={styles.label}>Password</label>
             <input
-              style={styles.input}
+              style={{
+                ...styles.input,
+                borderColor: error && !formData.password ? '#ef4444' : '#e5e7eb'
+              }}
               type="password"
               name="password"
-              placeholder="••••••••"
+              placeholder="Min 8 characters"
               value={formData.password}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" style={styles.btn} disabled={loading}>
+          <button
+            type="submit"
+            style={{
+              ...styles.btn,
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+            disabled={loading}
+          >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
@@ -115,10 +165,11 @@ const styles = {
   error: {
     backgroundColor: '#fee2e2',
     color: '#ef4444',
-    padding: '10px',
+    padding: '12px',
     borderRadius: '6px',
     marginBottom: '16px',
     fontSize: '14px',
+    border: '1px solid #fecaca',
   },
   field: {
     marginBottom: '16px',
@@ -137,6 +188,7 @@ const styles = {
     border: '1px solid #e5e7eb',
     fontSize: '14px',
     boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
   },
   btn: {
     width: '100%',

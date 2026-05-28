@@ -18,14 +18,31 @@ const Signup = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('All fields are required');
+    // Frontend validation
+    if (!formData.name.trim()) {
+      setError('Full name is required');
+      return;
+    }
+
+    if (!formData.email) {
+      setError('Email is required');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!formData.password) {
+      setError('Password is required');
       return;
     }
 
@@ -40,7 +57,19 @@ const Signup = () => {
       login(res.data.user, res.data.token);
       navigate('/tickets');
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed');
+      if (err.response) {
+        if (err.response.status === 400) {
+          setError(err.response.data.message || 'Email already registered');
+        } else if (err.response.status === 500) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError(err.response.data.message || 'Signup failed');
+        }
+      } else if (err.request) {
+        setError('Cannot connect to server. Please check your internet connection.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,7 +81,11 @@ const Signup = () => {
         <h2 style={styles.heading}>🎫 Create Account</h2>
         <p style={styles.subheading}>Join your team's workspace</p>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <div style={styles.error}>
+            ⚠️ {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
@@ -64,6 +97,7 @@ const Signup = () => {
               placeholder="John Doe"
               value={formData.name}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
@@ -76,6 +110,7 @@ const Signup = () => {
               placeholder="john@example.com"
               value={formData.email}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
@@ -88,6 +123,7 @@ const Signup = () => {
               placeholder="Min 8 characters"
               value={formData.password}
               onChange={handleChange}
+              disabled={loading}
             />
           </div>
 
@@ -98,6 +134,7 @@ const Signup = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
+              disabled={loading}
             >
               <option value="developer">Developer</option>
               <option value="qa">QA Engineer</option>
@@ -106,7 +143,15 @@ const Signup = () => {
             </select>
           </div>
 
-          <button type="submit" style={styles.btn} disabled={loading}>
+          <button
+            type="submit"
+            style={{
+              ...styles.btn,
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+            disabled={loading}
+          >
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
@@ -152,10 +197,11 @@ const styles = {
   error: {
     backgroundColor: '#fee2e2',
     color: '#ef4444',
-    padding: '10px',
+    padding: '12px',
     borderRadius: '6px',
     marginBottom: '16px',
     fontSize: '14px',
+    border: '1px solid #fecaca',
   },
   field: {
     marginBottom: '16px',
