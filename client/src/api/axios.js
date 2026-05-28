@@ -1,10 +1,11 @@
 import axios from 'axios';
 
+// Use Render backend URL in production, localhost in development
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
 });
 
-// Automatically attach token to every request
+// Request interceptor
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,7 +14,7 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Automatically handle 401 errors
+// Response interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
