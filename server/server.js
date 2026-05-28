@@ -15,9 +15,12 @@ const corsOptions = {
     'https://ticket-management-system-rosy.vercel.app/',
   ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(express.json());
 
 app.use('/api/v1/auth', require('./routes/auth.routes'));
