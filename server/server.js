@@ -3,30 +3,32 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Load env vars
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Updated CORS - allow both local and production frontend
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'https://ticket-management-system-rosy.vercel.app/',
+  ],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routes
 app.use('/api/v1/auth', require('./routes/auth.routes'));
 app.use('/api/v1/tickets', require('./routes/ticket.routes'));
 app.use('/api/v1/tickets/:id/comments', require('./routes/comment.routes'));
 app.use('/api/v1/users', require('./routes/user.routes'));
 
-// Health check
 app.get('/', (req, res) => {
   res.json({ message: 'Ticket Management API is running' });
 });
 
-// Handle unknown routes
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
