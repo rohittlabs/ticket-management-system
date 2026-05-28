@@ -8,19 +8,14 @@ connectDB();
 
 const app = express();
 
-// Updated CORS - allow both local and production frontend
-const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'https://ticket-management-system-rosy.vercel.app/',
-  ],
-  credentials: true,
+// Temporary fix — allow ALL origins
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-};
+}));
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests
+app.options('*', cors());
 app.use(express.json());
 
 app.use('/api/v1/auth', require('./routes/auth.routes'));
